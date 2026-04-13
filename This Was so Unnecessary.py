@@ -2,6 +2,7 @@ import pdfplumber
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import mplcursors
 
 pdf_files = ["file1.pdf", "file2.pdf"]
 
@@ -75,15 +76,17 @@ else:
 
 print(f"You scored higher than {percentile:.2f}% of students")
 
-# === DISCRETE GRAPH ===
+# === DISCRETE GRAPH WITH ACCURATE COUNT ===
 
-# Count frequency of each mark
-marks_range = range(int(min(data)), int(max(data)) + 1)
-freq = [np.sum(data == m) for m in marks_range]
+# Fix precision issue by rounding to nearest integer
+data_int = np.round(data).astype(int)
+
+marks_range = range(int(min(data_int)), int(max(data_int)) + 1)
+freq = [np.sum(data_int == m) for m in marks_range]
 
 plt.figure(figsize=(12, 6))
 
-plt.bar(marks_range, freq, color='skyblue', edgecolor='black')
+bars = plt.bar(marks_range, freq, color='skyblue', edgecolor='black')
 
 # Fail cutoff
 plt.axvline(35, color='red', linestyle='--', label='Fail Cutoff')
@@ -91,15 +94,24 @@ plt.axvline(35, color='red', linestyle='--', label='Fail Cutoff')
 # Your marks
 plt.axvline(user_marks, color='blue', linestyle='-', label='Your Marks')
 
-# Labels for clarity
+# Labels
 plt.title("Exact Marks Distribution (Every Mark Shown)")
 plt.xlabel("Marks")
 plt.ylabel("Number of Students")
 
-plt.xticks(marks_range)  # show EVERY mark on x-axis
+plt.xticks(marks_range)
 
 plt.legend()
 plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+# === HOVER TOOLTIP ===
+cursor = mplcursors.cursor(bars, hover=True)
+
+@cursor.connect("add")
+def on_add(sel):
+    x = sel.target[0]
+    y = sel.target[1]
+    sel.annotation.set_text(f"Marks: {int(x)}\nStudents: {int(y)}")
 
 plt.tight_layout()
 plt.show()
